@@ -35,7 +35,7 @@ Central Traefik reverse proxy for Docker environments with automatic TLS via Clo
 
 ```bash
 docker network create traefik-net
-cp .env.example .env
+cp env.example .env
 docker compose up -d
 ```
 
@@ -53,11 +53,11 @@ Expected result: Traefik is running and ready to issue certificates on first rou
 
 ## Environment Variables
 
-| Name | Required | Default | Description |
-| ---- | -------- | ------- | ----------- |
-| ADMIN_EMAIL | yes | - | Email used by ACME for certificate issuance |
-| CF_DNS_API_TOKEN | yes | - | Cloudflare API token for DNS-01 challenges |
-| TRAEFIK_NET | yes | - | External Docker network name |
+| Name             | Required | Default | Description                                 |
+| ---------------- | -------- | ------- | ------------------------------------------- |
+| ADMIN_EMAIL      | yes      | -       | Email used by ACME for certificate issuance |
+| CF_DNS_API_TOKEN | yes      | -       | Cloudflare API token for DNS-01 challenges  |
+| TRAEFIK_NET      | yes      | -       | External Docker network name                |
 
 ---
 
