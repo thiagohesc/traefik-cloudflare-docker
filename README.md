@@ -84,4 +84,4 @@ docker compose down
 - TLS challenge fails: check `CF_DNS_API_TOKEN` permissions and DNS propagation.
 - `acme.json` permission errors: ensure it is `600` and mounted as `./letsencrypt`.
 - Network errors: confirm the external network exists and matches `TRAEFIK_NET`.
-- Dashboard not reachable: it is bound to `127.0.0.1:8080` only.
+- Dashboard not reachable: it is bound to `127.0.0.1:17000` only (`8080` is internal to the container).
