@@ -1,40 +1,76 @@
 services:
   traefik:
-    image: traefik:v2.11.38
+    image: traefik:v3.7.13
     container_name: traefik
     restart: unless-stopped
+
     command:
+      # Docker
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=${TRAEFIK_NET:?Defina TRAEFIK_NET}
+
+      # HTTP → HTTPS
       - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+
+      # HTTPS com TLS e resolver padrão
       - --entrypoints.websecure.address=:443
-      - --entrypoints.mqtts.address=:8883
-      - --certificatesresolvers.cloudflare.acme.email=${ADMIN_EMAIL}
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certresolver=cloudflare
+
+      # Let's Encrypt via Cloudflare
+      - --certificatesresolvers.cloudflare.acme.email=${ADMIN_EMAIL:?Defina ADMIN_EMAIL}
       - --certificatesresolvers.cloudflare.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare
       - --certificatesresolvers.cloudflare.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+
+      # Dashboard: exige router autenticado para acesso
       - --api.dashboard=true
-      - --api.insecure=true
+      - --api.insecure=false
+
+      # Healthcheck interno
+      - --ping=true
+
+      # Logs
+      - --log.level=INFO
+      - --log.format=json
+      - --accesslog=true
+      - --accesslog.format=json
+
     ports:
       - "80:80"
       - "443:443"
-      - "8883:8883"
-      - "127.0.0.1:17000:8080"
+
     environment:
-      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN:?Defina CF_DNS_API_TOKEN}
+
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./letsencrypt:/letsencrypt
+
     networks:
       - net
+
+    security_opt:
+      - no-new-privileges:true
+
     healthcheck:
-      test: ["CMD-SHELL", "nc -z 127.0.0.1 80"]
+      test: [ "CMD", "traefik", "healthcheck", "--ping" ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 networks:
   net:
     external: true
-    name: ${TRAEFIK_NET}
+    name: ${TRAEFIK_NET:?Defina TRAEFIK_NET}
